@@ -6,6 +6,16 @@ const todoList = document.querySelector("#todoList");
 
 let count = 1;
 
+function updateNumbers() {
+  const allLi = todoList.querySelectorAll("li");
+
+  allLi.forEach(function(li, index) {
+    const span = li.querySelector("span");
+    const parts = span.textContent.split(".");
+    span.textContent = (index + 1) + "." + parts[1];
+  });
+}
+
 function addTodo() {
   const todoText = todoInput.value.trim();
   const finalText = todoText.charAt(0).toUpperCase() + todoText.slice(1);
@@ -16,12 +26,28 @@ function addTodo() {
   }
 
   const li = document.createElement("li");
-li.textContent = count + "." + finalText;
+const span = document.createElement("span");
+span.textContent = count + "." + finalText;
 count++;
+
+const deleteBtn = document.createElement("button");
+deleteBtn.textContent = "Sil";
+deleteBtn.addEventListener("click", function() {
+    event.stopPropagation();
+    li.remove();
+    updateNumbers();
+})
+li.appendChild(span);
+li.appendChild(deleteBtn);
 
 li.addEventListener("click", function () {
   li.classList.toggle("done");
 });
+
+// li.addEventListener("dblclick", function () {
+ // li.remove();
+//  updateNumbers();
+// });                       çift tıklamayla butonu yani seçilen li satırını kaldırmak için yapmıştım.
 
 todoList.appendChild(li);
 
