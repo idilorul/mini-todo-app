@@ -4,60 +4,71 @@ const todoInput = document.querySelector("#todoInput");
 const addBtn = document.querySelector("#addBtn");
 const todoList = document.querySelector("#todoList");
 
-let count = 1;
+const todos = [];
 
-function updateNumbers() {
-  const allLi = todoList.querySelectorAll("li");
+function renderTodos() {
+  todoList.innerHTML = "";
 
-  allLi.forEach(function(li, index) {
-    const span = li.querySelector("span");
-    const parts = span.textContent.split(".");
-    span.textContent = (index + 1) + "." + parts[1];
+  todos.forEach(function (todo, index) {
+    const li = document.createElement("li");
+
+    if (todo.completed) {
+      li.classList.add("done");
+    }
+
+    const numberSpan = document.createElement("span");
+    numberSpan.classList.add("number");
+    numberSpan.textContent = (index + 1) + ". ";
+
+    const textSpan = document.createElement("span");
+    textSpan.classList.add("text");
+    textSpan.textContent = todo.text;
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Sil";
+
+    deleteBtn.addEventListener("click", function (event) {
+      event.stopPropagation();
+      todos.splice(index, 1);
+      renderTodos();
+    });
+
+    li.addEventListener("click", function () {
+      todo.completed = !todo.completed;
+      renderTodos();
+    });
+
+    li.appendChild(numberSpan);
+    li.appendChild(textSpan);
+    li.appendChild(deleteBtn);
+
+    todoList.appendChild(li);
   });
 }
 
 function addTodo() {
   const todoText = todoInput.value.trim();
-  const finalText = todoText.charAt(0).toUpperCase() + todoText.slice(1);
 
   if (todoText === "") {
     alert("Lütfen bir görev yaz.");
     return;
   }
 
-  const li = document.createElement("li");
-const span = document.createElement("span");
-span.textContent = count + "." + finalText;
-count++;
+  const finalText = todoText.charAt(0).toUpperCase() + todoText.slice(1);
 
-const deleteBtn = document.createElement("button");
-deleteBtn.textContent = "Sil";
-deleteBtn.addEventListener("click", function() {
-    event.stopPropagation();
-    li.remove();
-    updateNumbers();
-})
-li.appendChild(span);
-li.appendChild(deleteBtn);
+  todos.push({
+    text: finalText,
+    completed: false
+  });
 
-li.addEventListener("click", function () {
-  li.classList.toggle("done");
-});
-
-// li.addEventListener("dblclick", function () {
- // li.remove();
-//  updateNumbers();
-// });                       çift tıklamayla butonu yani seçilen li satırını kaldırmak için yapmıştım.
-
-todoList.appendChild(li);
-
-todoInput.value = "";
+  renderTodos();
+  todoInput.value = "";
 }
 
 addBtn.addEventListener("click", addTodo);
 
 todoInput.addEventListener("keydown", function (event) {
-  if (event.key === "Enter" && todoInput.value !== "") {
-    addTodo(); // aynı kodu iki event’e (click ve keydown) bağlamak için, ortak işi fonksiyona çıkardım
-  } 
+  if (event.key === "Enter") {
+    addTodo();
+  }
 });
