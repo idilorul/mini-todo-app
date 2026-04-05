@@ -4,7 +4,12 @@ const todoInput = document.querySelector("#todoInput");
 const addBtn = document.querySelector("#addBtn");
 const todoList = document.querySelector("#todoList");
 
-const todos = [];
+const savedTodos = localStorage.getItem("todos");
+const todos = savedTodos ? JSON.parse(savedTodos) : [];
+
+function saveTodos() {
+  localStorage.setItem("todos", JSON.stringify(todos));
+}
 
 function renderTodos() {
   todoList.innerHTML = "";
@@ -24,17 +29,56 @@ function renderTodos() {
     textSpan.classList.add("text");
     textSpan.textContent = todo.text;
 
+    textSpan.addEventListener("click", function (event) {
+      event.stopPropagation();
+    });
+
+    textSpan.addEventListener("dblclick", function (event) {
+      event.stopPropagation();
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = todo.text;
+
+      li.replaceChild(input, textSpan);
+      input.focus();
+
+      input.addEventListener("click", function (event) {
+        event.stopPropagation();
+      });
+
+      input.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          const newText = input.value.trim();
+
+          if (newText === "") {
+            alert("Boş bırakamazsın");
+            return;
+          }
+
+          const finalText =
+            newText.charAt(0).toUpperCase() + newText.slice(1);
+
+          todos[index].text = finalText;
+          saveTodos();
+          renderTodos();
+        }
+      });
+    });
+
     const deleteBtn = document.createElement("button");
     deleteBtn.textContent = "Sil";
 
     deleteBtn.addEventListener("click", function (event) {
       event.stopPropagation();
       todos.splice(index, 1);
+      saveTodos();
       renderTodos();
     });
 
     li.addEventListener("click", function () {
       todo.completed = !todo.completed;
+      saveTodos();
       renderTodos();
     });
 
@@ -61,6 +105,7 @@ function addTodo() {
     completed: false
   });
 
+  saveTodos();
   renderTodos();
   todoInput.value = "";
 }
@@ -72,3 +117,5 @@ todoInput.addEventListener("keydown", function (event) {
     addTodo();
   }
 });
+
+renderTodos();
