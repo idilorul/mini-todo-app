@@ -6,6 +6,7 @@ const todoList = document.querySelector("#todoList");
 const allBtn = document.querySelector("#allBtn");
 const activeBtn = document.querySelector("#activeBtn");
 const completedBtn = document.querySelector("#completedBtn");
+const clearCompletedBtn = document.querySelector("#clearCompletedBtn")
 
 // ========================
 // FILTER STATE
@@ -18,7 +19,17 @@ let currentFilter = "all";
 // ========================
 // Daha önce kayıtlı todos varsa al, yoksa boş dizi başlat
 const savedTodos = localStorage.getItem("todos");
-const todos = savedTodos ? JSON.parse(savedTodos) : [];
+let todos = savedTodos ? JSON.parse(savedTodos) : [];
+
+// Completed olan tüm task'ları siler (sadece aktif olanları bırakır)
+clearCompletedBtn.addEventListener("click", function() {
+    todos= todos.filter(function (todo) {
+        return !todo.completed;
+    });
+
+    saveTodos();
+    renderTodos();
+});
 
 // ========================
 // LOCAL STORAGE'A KAYDETME
@@ -26,6 +37,24 @@ const todos = savedTodos ? JSON.parse(savedTodos) : [];
 // todos dizisini string'e çevirip saklıyorum
 function saveTodos() {
   localStorage.setItem("todos", JSON.stringify(todos));
+}
+
+// ========================
+// FILTER BUTTON UI GÜNCELLEME
+// ========================
+// Aktif filter butonuna selected class ekler
+function updateFilterButtons() {
+  allBtn.classList.remove("selected");
+  activeBtn.classList.remove("selected");
+  completedBtn.classList.remove("selected");
+
+  if (currentFilter === "all") {
+    allBtn.classList.add("selected");
+  } else if (currentFilter === "active") {
+    activeBtn.classList.add("selected");
+  } else if (currentFilter === "completed") {
+    completedBtn.classList.add("selected");
+  }
 }
 
 // ========================
@@ -53,12 +82,12 @@ function renderTodos() {
   });
 
   // ========================
-  //   // TODO'LARI EKRANA BASMA
+  // TODO'LARI EKRANA BASMA
   // ========================
   filteredTodos.forEach(function (todo, index) {
     const li = document.createElement("li");
 
-    // Eğer tamamlandıysa görsel stil ekle ( üstü çizilir )
+    // Eğer tamamlandıysa görsel stil ekle (üstü çizilir)
     if (todo.completed) {
       li.classList.add("done");
     }
@@ -73,7 +102,7 @@ function renderTodos() {
     textSpan.classList.add("text");
     textSpan.textContent = todo.text;
 
-    // text'e tıklayınca li click tetiklenmesin (event çakışmasını önler)
+    // Text'e tıklayınca li click tetiklenmesin
     textSpan.addEventListener("click", function (event) {
       event.stopPropagation();
     });
@@ -173,10 +202,13 @@ function renderTodos() {
     // Listeye ekle
     todoList.appendChild(li);
   });
+
+  // Filter butonlarını render sonunda bir kere güncelle
+  updateFilterButtons();
 }
 
 // ========================
-// // TODO EKLEME
+// TODO EKLEME
 // ========================
 function addTodo() {
   const todoText = todoInput.value.trim();
