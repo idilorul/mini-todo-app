@@ -6,43 +6,64 @@ const todoList = document.querySelector("#todoList");
 const allBtn = document.querySelector("#allBtn");
 const activeBtn = document.querySelector("#activeBtn");
 const completedBtn = document.querySelector("#completedBtn");
-const clearCompletedBtn = document.querySelector("#clearCompletedBtn")
+const clearCompletedBtn = document.querySelector("#clearCompletedBtn");
 
 // ========================
-// FILTER STATE
+// STATE
 // ========================
-// Hangi todo'ların gösterileceğini belirler (all / active / completed)
 let currentFilter = "all";
 
-// ========================
-// LOCAL STORAGE'DAN VERİ ÇEKME
-// ========================
-// Daha önce kayıtlı todos varsa al, yoksa boş dizi başlat
 const savedTodos = localStorage.getItem("todos");
 let todos = savedTodos ? JSON.parse(savedTodos) : [];
 
-// Completed olan tüm task'ları siler (sadece aktif olanları bırakır)
-clearCompletedBtn.addEventListener("click", function() {
-    todos= todos.filter(function (todo) {
-        return !todo.completed;
-    });
-
-    saveTodos();
-    renderTodos();
-});
-
 // ========================
-// LOCAL STORAGE'A KAYDETME
+// LOCAL STORAGE
 // ========================
-// todos dizisini string'e çevirip saklıyorum
 function saveTodos() {
   localStorage.setItem("todos", JSON.stringify(todos));
 }
 
 // ========================
-// FILTER BUTTON UI GÜNCELLEME
+// HELPER FUNCTIONS
 // ========================
-// Aktif filter butonuna selected class ekler
+
+// İlk harfi büyük yapar
+function capitalizeFirstLetter(text) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+// ID'ye göre todo objesini bulur
+function findTodoById(id) {
+  return todos.find(function (todo) {
+    return todo.id === id;
+  });
+}
+
+// ID'ye göre todo index'ini bulur
+function findTodoIndexById(id) {
+  return todos.findIndex(function (todo) {
+    return todo.id === id;
+  });
+}
+
+// Mevcut filtreye göre gösterilecek todo'ları döndürür
+function getFilteredTodos() {
+  return todos.filter(function (todo) {
+    if (currentFilter === "active") {
+      return todo.completed === false;
+    }
+
+    if (currentFilter === "completed") {
+      return todo.completed === true;
+    }
+
+    return true;
+  });
+}
+
+// ========================
+// FILTER BUTTON UI
+// ========================
 function updateFilterButtons() {
   allBtn.classList.remove("selected");
   activeBtn.classList.remove("selected");
@@ -58,157 +79,140 @@ function updateFilterButtons() {
 }
 
 // ========================
-// RENDER FONKSİYONU
+// TODO ACTIONS
 // ========================
-// Ekrandaki todo listesini baştan oluşturur
-function renderTodos() {
-  // Önce listeyi tamamen temizler
-  todoList.innerHTML = "";
+function deleteTodo(id) {
+  const todoIndex = findTodoIndexById(id);
 
-  // ========================
-  // FILTER UYGULAMA
-  // ========================
-  // currentFilter'a göre hangi todo'ların gösterileceğini belirler
-  const filteredTodos = todos.filter(function (todo) {
-    if (currentFilter === "active") {
-      return todo.completed === false;
-    }
+  if (todoIndex === -1) return;
 
-    if (currentFilter === "completed") {
-      return todo.completed === true;
-    }
+  todos.splice(todoIndex, 1);
+  saveTodos();
+  renderTodos();
+}
 
-    return true; // "all"
+function toggleTodo(id) {
+  const foundTodo = findTodoById(id);
+
+  if (!foundTodo) return;
+
+  foundTodo.completed = !foundTodo.completed;
+  saveTodos();
+  renderTodos();
+}
+
+function updateTodo(id, newText) {
+  const foundTodo = findTodoById(id);
+
+  if (!foundTodo) return;
+
+  foundTodo.text = capitalizeFirstLetter(newText);
+  saveTodos();
+  renderTodos();
+}
+
+function clearCompletedTodos() {
+  todos = todos.filter(function (todo) {
+    return !todo.completed;
   });
 
-  // ========================
-  // TODO'LARI EKRANA BASMA
-  // ========================
-  filteredTodos.forEach(function (todo, index) {
-    const li = document.createElement("li");
+  saveTodos();
+  renderTodos();
+}
 
-    // Eğer tamamlandıysa görsel stil ekle (üstü çizilir)
-    if (todo.completed) {
-      li.classList.add("done");
+// ========================
+// EDIT MODE
+// ========================
+function enableEditMode(li, textSpan, todo) {
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = todo.text;
+
+  li.replaceChild(input, textSpan);
+  input.focus();
+
+  input.addEventListener("click", function (event) {
+    event.stopPropagation();
+  });
+
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      const newText = input.value.trim();
+
+      if (newText === "") {
+        alert("Boş bırakamazsın");
+        return;
+      }
+
+      updateTodo(todo.id, newText);
     }
+  });
+}
 
-    // Görev numarası
-    const numberSpan = document.createElement("span");
-    numberSpan.classList.add("number");
-    numberSpan.textContent = index + 1 + ". ";
+// ========================
+// CREATE TODO ITEM
+// ========================
+function createTodoElement(todo, index) {
+  const li = document.createElement("li");
 
-    // Görev metni
-    const textSpan = document.createElement("span");
-    textSpan.classList.add("text");
-    textSpan.textContent = todo.text;
+  if (todo.completed) {
+    li.classList.add("done");
+  }
 
-    // Text'e tıklayınca li click tetiklenmesin
-    textSpan.addEventListener("click", function (event) {
-      event.stopPropagation();
-    });
+  const numberSpan = document.createElement("span");
+  numberSpan.classList.add("number");
+  numberSpan.textContent = index + 1 + ". ";
 
-    // ========================
-    // EDIT (DOUBLE CLICK)
-    // ========================
-    textSpan.addEventListener("dblclick", function (event) {
-      event.stopPropagation();
+  const textSpan = document.createElement("span");
+  textSpan.classList.add("text");
+  textSpan.textContent = todo.text;
 
-      const input = document.createElement("input");
-      input.type = "text";
-      input.value = todo.text;
+  const deleteBtn = document.createElement("button");
+  deleteBtn.textContent = "Sil";
 
-      // span yerine input koyar (edit mode)
-      li.replaceChild(input, textSpan);
-      input.focus();
+  textSpan.addEventListener("click", function (event) {
+    event.stopPropagation();
+  });
 
-      // input içindeki click'ler üst elemana gitmesin
-      input.addEventListener("click", function (event) {
-        event.stopPropagation();
-      });
+  textSpan.addEventListener("dblclick", function (event) {
+    event.stopPropagation();
+    enableEditMode(li, textSpan, todo);
+  });
 
-      // Enter'a basınca güncelle
-      input.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-          const newText = input.value.trim();
+  deleteBtn.addEventListener("click", function (event) {
+    event.stopPropagation();
+    deleteTodo(todo.id);
+  });
 
-          if (newText === "") {
-            alert("Boş bırakamazsın");
-            return;
-          }
+  li.addEventListener("click", function () {
+    toggleTodo(todo.id);
+  });
 
-          const finalText =
-            newText.charAt(0).toUpperCase() + newText.slice(1);
+  li.appendChild(numberSpan);
+  li.appendChild(textSpan);
+  li.appendChild(deleteBtn);
 
-          // id kullan çünkü filter sonrası index güvenli değil
-          const foundTodo = todos.find(function (item) {
-            return item.id === todo.id;
-          });
+  return li;
+}
 
-          if (!foundTodo) return;
+// ========================
+// RENDER
+// ========================
+function renderTodos() {
+  todoList.innerHTML = "";
 
-          foundTodo.text = finalText;
+  const filteredTodos = getFilteredTodos();
 
-          saveTodos();
-          renderTodos();
-        }
-      });
-    });
-
-    // ========================
-    // DELETE
-    // ========================
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Sil";
-
-    deleteBtn.addEventListener("click", function (event) {
-      event.stopPropagation();
-
-      // Silinecek todo'nun gerçek index'ini bulur
-      const todoIndex = todos.findIndex(function (item) {
-        return item.id === todo.id;
-      });
-
-      if (todoIndex === -1) return;
-
-      // Diziden kaldırır
-      todos.splice(todoIndex, 1);
-
-      saveTodos();
-      renderTodos();
-    });
-
-    // ========================
-    // TOGGLE COMPLETED
-    // ========================
-    li.addEventListener("click", function () {
-      const foundTodo = todos.find(function (item) {
-        return item.id === todo.id;
-      });
-
-      if (!foundTodo) return;
-
-      // true ↔ false değiştir
-      foundTodo.completed = !foundTodo.completed;
-
-      saveTodos();
-      renderTodos();
-    });
-
-    // Elemanları birleştir
-    li.appendChild(numberSpan);
-    li.appendChild(textSpan);
-    li.appendChild(deleteBtn);
-
-    // Listeye ekle
+  filteredTodos.forEach(function (todo, index) {
+    const li = createTodoElement(todo, index);
     todoList.appendChild(li);
   });
 
-  // Filter butonlarını render sonunda bir kere güncelle
   updateFilterButtons();
 }
 
 // ========================
-// TODO EKLEME
+// ADD TODO
 // ========================
 function addTodo() {
   const todoText = todoInput.value.trim();
@@ -218,26 +222,22 @@ function addTodo() {
     return;
   }
 
-  const finalText = todoText.charAt(0).toUpperCase() + todoText.slice(1);
-
-  // Yeni todo objesi oluşturur
-  // id: kimlik (filter sonrası doğru elemanı bulmak için)
   todos.push({
     id: Date.now(),
-    text: finalText,
+    text: capitalizeFirstLetter(todoText),
     completed: false
   });
 
   saveTodos();
   renderTodos();
-
-  // Input'u temizliyoruz (yeni giriş için)
   todoInput.value = "";
 }
 
 // ========================
-// FILTER BUTTONS
+// EVENTS
 // ========================
+clearCompletedBtn.addEventListener("click", clearCompletedTodos);
+
 allBtn.addEventListener("click", function () {
   currentFilter = "all";
   renderTodos();
@@ -253,12 +253,8 @@ completedBtn.addEventListener("click", function () {
   renderTodos();
 });
 
-// ========================
-// EVENTLER
-// ========================
 addBtn.addEventListener("click", addTodo);
 
-// Enter ile ekleme
 todoInput.addEventListener("keydown", function (event) {
   if (event.key === "Enter") {
     addTodo();
@@ -268,5 +264,4 @@ todoInput.addEventListener("keydown", function (event) {
 // ========================
 // INITIAL RENDER
 // ========================
-// Sayfa açıldığında mevcut todos'ları göster
 renderTodos();
