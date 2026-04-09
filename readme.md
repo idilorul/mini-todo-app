@@ -4,24 +4,12 @@ A simple Todo App built with JavaScript.
 
 ## ✨ Latest Update
 
-* Refactored core logic by separating responsibilities into smaller functions
-* Introduced helper functions:
-
-  * `findTodoById`
-  * `findTodoIndexById`
-  * `capitalizeFirstLetter`
-* Separated action logic into dedicated functions:
-
-  * `deleteTodo`
-  * `toggleTodo`
-  * `updateTodo`
-* Improved code readability and maintainability
-* Implemented safer operations using guard clauses (e.g., preventing invalid deletes with `if (index === -1) return`)
-* Strengthened understanding of:
-
-  * **Data vs UI separation**
-  * **id vs index differences**
-  * **find vs findIndex usage**
+* Added empty state messages
+* Show remaining active task count
+* Prevent empty inputs using `trim()`
+* Improved edit behavior (Escape & blur support)
+* Improved `clearCompleted` logic using `Array.some`
+* Minor UI improvements (edit input & empty message styling)
 
 ## 🛠️ Tech
 
