@@ -1,18 +1,66 @@
-# 📝 Todo App
+# 📝 Mini Todo App
 
-A simple Todo App built with JavaScript.
+A simple and clean Todo application built with **Vanilla JavaScript**.
+This project focuses on understanding core JavaScript concepts such as state management, DOM manipulation, and localStorage.
 
-## ✨ Latest Update
+---
 
-* Added empty state messages
-* Show remaining active task count
-* Prevent empty inputs using `trim()`
-* Improved edit behavior (Escape & blur support)
-* Improved `clearCompleted` logic using `Array.some`
-* Minor UI improvements (edit input & empty message styling)
+## 🚀 Features
 
-## 🛠️ Tech
+* Add new tasks
+* Delete tasks
+* Mark tasks as completed
+* Edit tasks (double click)
+* Filter tasks:
+
+  * All
+  * Active
+  * Completed
+* Clear all completed tasks
+* Task counter (remaining tasks)
+* Persistent data using **localStorage**
+* Empty state messages
+
+---
+
+## 🛠️ Tech Stack
 
 * HTML
 * CSS
-* JavaScript
+* JavaScript (Vanilla JS)
+
+---
+
+## 📦 Project Structure
+
+* `todos` array → holds all task data
+* `renderTodos()` → updates UI based on state
+* helper functions → keep code modular and readable
+
+---
+
+## 🔄 Latest Update (Refactor)
+
+* Reduced repeated code using `saveAndRender()`
+* Improved readability and function structure
+* Simplified render flow
+* Cleaned up naming and logic
+
+---
+
+## 🎯 Goal of the Project
+
+The goal was not just to build a todo app, but to:
+
+* Write **clean and maintainable code**
+* Understand how real applications manage state
+* Practice structuring a small JavaScript project professionally
+
+---
+
+## 📌 Status
+
+✅ Completed (Version 1)
+Ready for further improvements or new features.
+
+---

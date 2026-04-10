@@ -24,42 +24,54 @@ function saveTodos() {
   localStorage.setItem("todos", JSON.stringify(todos));
 }
 
+function saveAndRender() {
+  saveTodos();
+  renderTodos();
+}
+
 // ========================
 // HELPER FUNCTIONS
 // ========================
-
-// İlk harfi büyük yapar
 function capitalizeFirstLetter(text) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-// ID'ye göre todo objesini bulur
 function findTodoById(id) {
   return todos.find(function (todo) {
     return todo.id === id;
   });
 }
 
-// ID'ye göre todo index'ini bulur
 function findTodoIndexById(id) {
   return todos.findIndex(function (todo) {
     return todo.id === id;
   });
 }
 
-// Mevcut filtreye göre gösterilecek todo'ları döndürür
 function getFilteredTodos() {
   return todos.filter(function (todo) {
     if (currentFilter === "active") {
-      return todo.completed === false;
+      return !todo.completed;
     }
 
     if (currentFilter === "completed") {
-      return todo.completed === true;
+      return todo.completed;
     }
 
     return true;
   });
+}
+
+function createEmptyMessage(message) {
+  const emptyMessage = document.createElement("li");
+  emptyMessage.classList.add("empty-message");
+  emptyMessage.textContent = message;
+  return emptyMessage;
+}
+
+function setFilter(filterName) {
+  currentFilter = filterName;
+  renderTodos();
 }
 
 // ========================
@@ -72,11 +84,15 @@ function updateFilterButtons() {
 
   if (currentFilter === "all") {
     allBtn.classList.add("selected");
-  } else if (currentFilter === "active") {
-    activeBtn.classList.add("selected");
-  } else if (currentFilter === "completed") {
-    completedBtn.classList.add("selected");
+    return;
   }
+
+  if (currentFilter === "active") {
+    activeBtn.classList.add("selected");
+    return;
+  }
+
+  completedBtn.classList.add("selected");
 }
 
 // ========================
@@ -87,11 +103,10 @@ function updateTaskCount() {
     return !todo.completed;
   }).length;
 
-  if (remainingCount === 1) {
-    taskCount.textContent = "1 görev kaldı";
-  } else {
-    taskCount.textContent = remainingCount + " görev kaldı";
-  }
+  taskCount.textContent =
+    remainingCount === 1
+      ? "1 görev kaldı"
+      : remainingCount + " görev kaldı";
 }
 
 // ========================
@@ -103,30 +118,27 @@ function deleteTodo(id) {
   if (todoIndex === -1) return;
 
   todos.splice(todoIndex, 1);
-  saveTodos();
-  renderTodos();
+  saveAndRender();
 }
 
 function toggleTodo(id) {
-  const foundTodo = findTodoById(id);
+  const todo = findTodoById(id);
 
-  if (!foundTodo) return;
+  if (!todo) return;
 
-  foundTodo.completed = !foundTodo.completed;
-  saveTodos();
-  renderTodos();
+  todo.completed = !todo.completed;
+  saveAndRender();
 }
 
 function updateTodo(id, newText) {
-  const foundTodo = findTodoById(id);
+  const todo = findTodoById(id);
   const trimmedText = newText.trim();
 
-  if (!foundTodo) return;
+  if (!todo) return;
   if (trimmedText === "") return;
 
-  foundTodo.text = capitalizeFirstLetter(trimmedText);
-  saveTodos();
-  renderTodos();
+  todo.text = capitalizeFirstLetter(trimmedText);
+  saveAndRender();
 }
 
 function clearCompletedTodos() {
@@ -140,8 +152,7 @@ function clearCompletedTodos() {
     return !todo.completed;
   });
 
-  saveTodos();
-  renderTodos();
+  saveAndRender();
 }
 
 // ========================
@@ -166,14 +177,12 @@ function enableEditMode(li, textSpan, todo) {
 
   input.addEventListener("keydown", function (event) {
     if (event.key === "Enter") {
-      const newText = input.value.trim();
-
-      if (newText === "") {
+      if (input.value.trim() === "") {
         alert("Boş bırakamazsın");
         return;
       }
 
-      updateTodo(todo.id, newText);
+      updateTodo(todo.id, input.value);
     }
 
     if (event.key === "Escape") {
@@ -237,21 +246,23 @@ function renderTodos() {
   const filteredTodos = getFilteredTodos();
 
   if (todos.length === 0) {
-    const emptyMessage = document.createElement("li");
-    emptyMessage.classList.add("empty-message");
-    emptyMessage.textContent = "Henüz görev yok.";
-    todoList.appendChild(emptyMessage);
-  } else if (filteredTodos.length === 0) {
-    const emptyMessage = document.createElement("li");
-    emptyMessage.classList.add("empty-message");
-    emptyMessage.textContent = "Bu filtrede gösterilecek görev yok.";
-    todoList.appendChild(emptyMessage);
-  } else {
-    filteredTodos.forEach(function (todo, index) {
-      const li = createTodoElement(todo, index);
-      todoList.appendChild(li);
-    });
+    todoList.appendChild(createEmptyMessage("Henüz görev yok."));
+    updateFilterButtons();
+    updateTaskCount();
+    return;
   }
+
+  if (filteredTodos.length === 0) {
+    todoList.appendChild(createEmptyMessage("Bu filtrede gösterilecek görev yok."));
+    updateFilterButtons();
+    updateTaskCount();
+    return;
+  }
+
+  filteredTodos.forEach(function (todo, index) {
+    const li = createTodoElement(todo, index);
+    todoList.appendChild(li);
+  });
 
   updateFilterButtons();
   updateTaskCount();
@@ -274,9 +285,8 @@ function addTodo() {
     completed: false
   });
 
-  saveTodos();
-  renderTodos();
   todoInput.value = "";
+  saveAndRender();
 }
 
 // ========================
@@ -285,18 +295,15 @@ function addTodo() {
 clearCompletedBtn.addEventListener("click", clearCompletedTodos);
 
 allBtn.addEventListener("click", function () {
-  currentFilter = "all";
-  renderTodos();
+  setFilter("all");
 });
 
 activeBtn.addEventListener("click", function () {
-  currentFilter = "active";
-  renderTodos();
+  setFilter("active");
 });
 
 completedBtn.addEventListener("click", function () {
-  currentFilter = "completed";
-  renderTodos();
+  setFilter("completed");
 });
 
 addBtn.addEventListener("click", addTodo);
